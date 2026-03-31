@@ -4,6 +4,7 @@ import HeroBackground from "./components/HeroBackground.jsx";
 import HeroSplineLayer from "./components/HeroSplineLayer.jsx";
 import { AnimatedButton } from "./components/AnimatedButton.jsx";
 import Magnetic from "./components/Magnetic.jsx";
+import CalendlySection from "./components/CalendlySection.jsx";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -43,6 +44,8 @@ const navBarItemVariants = {
 // ─── CSS injected via style tag ───────────────────────────────────────────────
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -328,8 +331,39 @@ body {
   margin-top: 10px;
   color: rgba(255, 255, 255, 0.2);
 }
-.hero-cta-page {
+.cta-group {
   margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 16px;
+  width: 100%;
+}
+.cta-secondary {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  padding: 14px 26px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cta-secondary:hover {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.52);
+}
+.cta-secondary:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+.hero-cta-page,
+.animated-button--primary {
   padding: 16px 32px;
   border-radius: 9999px;
   font-weight: 700;
@@ -345,10 +379,51 @@ body {
   text-decoration: none;
   transition: opacity 0.15s, transform 0.15s;
 }
-.hero-cta-page:hover { opacity: 0.98; }
-.hero-cta-page:focus-visible {
+.hero-cta-page {
+  margin-top: 32px;
+}
+.cta-group .hero-cta-page,
+.cta-group .animated-button--primary {
+  margin-top: 0;
+}
+.hero-cta-page:hover,
+.animated-button--primary:hover {
+  opacity: 0.98;
+}
+.hero-cta-page:focus-visible,
+.animated-button--primary:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.95);
   outline-offset: 3px;
+}
+.social-proof {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: var(--font-ui);
+}
+.social-proof strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+.social-proof > span:first-of-type {
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.no-risk {
+  margin: 0;
+  margin-top: 12px;
+  max-width: 36rem;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.52);
+  font-weight: 400;
+  font-family: var(--font-ui);
 }
 .hero-content { max-width: 896px; margin: 0 auto; text-align: center; padding: 88px 32px 0; position: relative; z-index: 10; }
 .hero-h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 500; line-height: 1.12; letter-spacing: -0.035em; margin-bottom: 20px; color: #fff; }
@@ -1381,6 +1456,11 @@ export default function MichaMegret() {
 
   useScrollReveal();
 
+  const scrollToCalendly = () => {
+    const el = document.getElementById("contact");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   /* Timeline processus : ligne orange remplie au scroll + pastilles / cartes synchronisées */
   useEffect(() => {
     const root = processTimelineRef.current;
@@ -1634,9 +1714,28 @@ export default function MichaMegret() {
             Un site qui travaille{" "}
             <span style={{ color: "#E8730A" }}>pour vous.</span>
           </p>
-          <AnimatedButton className="hero-cta-page" href="#contact">
-            Demander un devis gratuit →
-          </AnimatedButton>
+          <div className="cta-group">
+            <AnimatedButton
+              type="button"
+              text="Demander un devis gratuit →"
+              variant="primary"
+              onClick={scrollToCalendly}
+            />
+            <a href="#portfolio" className="cta-secondary">
+              Voir les projets ↓
+            </a>
+          </div>
+          {/* Compteur social */}
+          <div className="social-proof">
+            <span>⭐⭐⭐⭐⭐</span>
+            <strong>12 projets livrés</strong>
+            <span>·</span>
+            <span>5/5 client rating</span>
+          </div>
+          {/* Réducteur d&apos;anxiété */}
+          <p className="no-risk">
+            ✓ Sans engagement &nbsp;·&nbsp; ✓ Devis sous 24h &nbsp;·&nbsp; ✓ Premier appel offert
+          </p>
         </div>
 
         <div className="hero-carousel" aria-hidden="true">
@@ -2009,74 +2108,9 @@ export default function MichaMegret() {
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
-      <section className="contact" id="contact">
-        <div className="container">
-          <h2 className="section-title section-title-lg fade-up">
-            Prêt à donner vie à <span style={{color:"var(--accent)"}}>votre projet ?</span>
-          </h2>
-          <p className="section-desc fade-up" style={{maxWidth:700,margin:"0 auto 28px"}}>
-            Que vous ayez besoin d'un site internet, d'une boutique en ligne ou d'une stratégie digitale complète, commençons par un appel découverte de 30 minutes.<br/>
-            <span>Gratuit, sans engagement.</span>
-          </p>
-          <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:28}} className="fade-up">
-            <AnimatedButton className="btn-dark" href="#" style={{ padding: "16px 32px", fontSize: 16 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
-              Réserver un appel découverte
-            </AnimatedButton>
-          </div>
-          <p className="section-desc" style={{fontSize:14,marginBottom:8}}>Ou contactez-moi directement :</p>
-          <a href="mailto:contact@micha-megret.fr" className="contact-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
-            contact@micha-megret.fr
-          </a>
-          <div className="divider"><div className="divider-line"/><span className="divider-text">ou</span><div className="divider-line"/></div>
-          <div className="contact-form-wrap fade-up">
-            <h3>Envoyez-moi un message</h3>
-            <form style={{maxWidth:672,margin:"0 auto"}} onSubmit={e=>e.preventDefault()}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor="contact-name">Nom complet <span>*</span></label>
-                  <input id="contact-name" name="name" type="text" autoComplete="name" className="form-input" placeholder="Jean Dupont" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="contact-email">Email <span>*</span></label>
-                  <input id="contact-email" name="email" type="email" autoComplete="email" className="form-input" placeholder="jean@example.fr" />
-                </div>
-              </div>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor="contact-phone">Téléphone <span style={{ color: "var(--accent)", fontWeight: 300 }}>(optionnel)</span></label>
-                  <input id="contact-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" className="form-input" placeholder="+33 6 00 00 00 00" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="contact-subject">Sujet <span>*</span></label>
-                  <input id="contact-subject" name="subject" type="text" className="form-input" placeholder="Création site vitrine" />
-                </div>
-              </div>
-              <div className="form-group" style={{ marginBottom: 20 }}>
-                <label htmlFor="contact-message">Votre message <span>*</span></label>
-                <textarea id="contact-message" name="message" className="form-textarea" rows={4} placeholder="Décrivez votre projet..." />
-              </div>
-              <div style={{paddingTop:8,display:"flex",justifyContent:"center"}}>
-                <AnimatedButton type="submit" className="btn-dark" style={{ padding: "16px 32px", fontSize: 16 }}>
-                  Envoyer mon message
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5"/></svg>
-                </AnimatedButton>
-              </div>
-            </form>
-          </div>
-          <div className="trust-badges fade-up">
-            {["Réponse sous 24h","Sans engagement","Devis gratuit"].map((b,i) => (
-              <div key={i} className="trust-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={i===0?"M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z":i===1?"M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z":"M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"}/>
-                </svg>
-                {b}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ── CONTACT (formulaire + Calendly) ── */}
+      <section className="contact" id="contact" style={{ padding: 0, background: "transparent" }}>
+        <CalendlySection />
       </section>
       </main>
 

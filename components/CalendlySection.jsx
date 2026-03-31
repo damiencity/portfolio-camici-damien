@@ -1,104 +1,159 @@
 import { useEffect, useRef, useState } from 'react';
 
+const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || 'TON_ID';
+
 export default function CalendlySection() {
-  const widgetRef = useRef(null);
-  const [loaded, setLoaded] = useState(false);
+  const calendlyInited = useRef(false);
+  const [ready, setReady] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    const initWidget = () => {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
       if (window.Calendly) {
-        window.Calendly.initInlineWidget({
-          url: 'https://calendly.com/damienk06/30min?hide_gdpr_banner=1&background_color=0a0a0a&text_color=ffffff&primary_color=f97316',
-          parentElement: document.querySelector('.calendly-inline-widget'),
-          prefill: {},
-          utm: {},
-        });
-        setLoaded(true);
+        clearInterval(interval);
+        setReady(true);
       }
-    };
-
-    // Script déjà chargé ?
-    if (window.Calendly) {
-      initWidget();
-      return;
-    }
-
-    // Sinon charger le script puis init
-    const script = document.createElement('script');
-    script.src = 'https://assets.calendly.com/assets/external/widget.js';
-    script.async = true;
-    script.onload = () => {
-      // Petit délai pour que Calendly s'initialise
-      setTimeout(initWidget, 300);
-    };
-    document.head.appendChild(script);
+      if (attempts >= 30) clearInterval(interval);
+    }, 200);
+    return () => clearInterval(interval);
   }, []);
 
-  // Écoute la confirmation de réservation Calendly
   useEffect(() => {
-    const handleMessage = (e) => {
-      if (e.data?.event === 'calendly.event_scheduled') {
-        // Analytics tracking (optionnel)
-        console.log('✅ RDV réservé via Calendly', e.data.payload);
-        // Tu peux ajouter ici : gtag, plausible, etc.
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+    if (!ready || calendlyInited.current) return;
+    const el = document.getElementById('calendly-embed');
+    if (!el || !window.Calendly) return;
+    calendlyInited.current = true;
+    window.Calendly.initInlineWidget({
+      url: 'https://calendly.com/damienk06/30min?hide_gdpr_banner=1&background_color=0d0d0d&text_color=ffffff&primary_color=f97316',
+      parentElement: el,
+    });
+  }, [ready]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) setSent(true);
+      else console.error('Formspree:', res.status, await res.text());
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div style={{ background: '#0a0a0a', width: '100%' }}>
-      <section id="calendly-section" style={styles.section}>
-      {/* Header section */}
-      <div style={styles.header}>
-        <p style={styles.eyebrow}>PRENDRE CONTACT</p>
-        <h2 style={styles.title}>
-          Réservons un appel
-          <span style={styles.titleAccent}> découverte</span>
-        </h2>
-        <p style={styles.subtitle}>
-          30 minutes pour discuter de ton projet. Sans engagement, sans prise de tête.
-        </p>
+    <div style={{ background: '#0d0d0d', width: '100%' }}>
+      <section id="calendly-section" aria-label="Contact" style={s.section}>
 
-        {/* Réducteurs d'anxiété */}
-        <div style={styles.trustRow}>
-          {['✓ Gratuit & sans engagement', '✓ Réponse sous 24h', '✓ Premier appel offert'].map((item) => (
-            <span key={item} style={styles.trustBadge}>{item}</span>
-          ))}
+        {/* HEADER */}
+        <div style={s.header}>
+          <p style={s.eyebrow}>PRENDRE CONTACT</p>
+          <h2 style={s.title}>
+            Travaillons <span style={s.accent}>ensemble</span>
+          </h2>
+          <p style={s.subtitle}>
+            Réserve un appel ou envoie-moi un message directement.
+          </p>
         </div>
-      </div>
 
-      {/* Widget Calendly */}
-      <div style={styles.widgetWrapper}>
-        {!loaded && (
-          <div style={styles.skeleton}>
-            <div style={styles.skeletonSpinner} />
-            <p style={styles.skeletonText}>Chargement du calendrier…</p>
+        {/* SPLIT */}
+        <div style={s.grid}>
+
+          {/* GAUCHE — Formulaire */}
+          <div style={s.card}>
+            <p style={s.cardEyebrow}>✉ Envoyer un message</p>
+            {sent ? (
+              <div style={s.success}>
+                <span style={{ fontSize: '2rem' }}>✅</span>
+                <p style={{ color: '#fff', marginTop: '12px', fontWeight: '600' }}>Message envoyé !</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginTop: '8px' }}>
+                  Je reviens vers toi sous 24h.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} style={s.form}>
+                <div style={s.fieldGroup}>
+                  <label style={s.label}>Nom complet</label>
+                  <input
+                    style={s.input}
+                    type="text"
+                    required
+                    placeholder="Jean Dupont"
+                    value={formData.name}
+                    onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                  />
+                </div>
+                <div style={s.fieldGroup}>
+                  <label style={s.label}>Email</label>
+                  <input
+                    style={s.input}
+                    type="email"
+                    required
+                    placeholder="jean@exemple.fr"
+                    value={formData.email}
+                    onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                  />
+                </div>
+                <div style={s.fieldGroup}>
+                  <label style={s.label}>Ton projet</label>
+                  <textarea
+                    style={{ ...s.input, height: '120px', resize: 'vertical' }}
+                    required
+                    placeholder="Décris ton projet en quelques lignes…"
+                    value={formData.message}
+                    onChange={(e) => setFormData((p) => ({ ...p, message: e.target.value }))}
+                  />
+                </div>
+                <button type="submit" style={s.btn}>
+                  Envoyer le message →
+                </button>
+                <p style={s.noRisk}>✓ Sans engagement · ✓ Réponse sous 24h</p>
+              </form>
+            )}
           </div>
-        )}
-        <div
-          ref={widgetRef}
-          className="calendly-inline-widget"
-          style={{
-            ...styles.widget,
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.4s ease',
-          }}
-        />
-      </div>
-    </section>
+
+          {/* DROITE — Calendly */}
+          <div style={s.card}>
+            <p style={s.cardEyebrow}>📅 Réserver un appel découverte</p>
+            <div style={{ position: 'relative', flex: 1 }}>
+              {!ready && (
+                <div style={s.skeleton}>
+                  <div style={s.spinner} />
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px' }}>
+                    Chargement…
+                  </p>
+                </div>
+              )}
+              <div
+                id="calendly-embed"
+                style={{
+                  width: '100%',
+                  height: '600px',
+                  opacity: ready ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                }}
+              />
+            </div>
+          </div>
+
+        </div>
+      </section>
     </div>
   );
 }
 
-// ---- STYLES ----
-const styles = {
+// ── STYLES ──────────────────────────────────────────
+const s = {
   section: {
-    padding: '100px 5vw',
-    maxWidth: '900px',
+    padding: '80px 5vw',
+    maxWidth: '1100px',
     margin: '0 auto',
-    background: 'transparent',
   },
   header: {
     textAlign: 'center',
@@ -109,46 +164,95 @@ const styles = {
     fontWeight: '600',
     letterSpacing: '0.15em',
     color: '#F97316',
-    marginBottom: '16px',
+    marginBottom: '12px',
     textTransform: 'uppercase',
   },
   title: {
-    fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+    fontSize: 'clamp(2rem, 4vw, 3rem)',
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#fff',
     lineHeight: '1.15',
-    marginBottom: '16px',
+    marginBottom: '12px',
   },
-  titleAccent: {
-    color: '#F97316',
-  },
+  accent: { color: '#F97316' },
   subtitle: {
-    fontSize: '1.1rem',
-    color: 'rgba(255,255,255,0.55)',
-    maxWidth: '480px',
-    margin: '0 auto 28px',
+    fontSize: '1rem',
+    color: 'rgba(255,255,255,0.5)',
+    maxWidth: '420px',
+    margin: '0 auto',
     lineHeight: '1.6',
   },
-  trustRow: {
-    display: 'flex',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: '12px',
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '24px',
+    alignItems: 'start',
   },
-  trustBadge: {
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.6)',
-    background: 'rgba(249,115,22,0.08)',
-    border: '1px solid rgba(249,115,22,0.2)',
-    borderRadius: '20px',
-    padding: '6px 14px',
-  },
-  widgetWrapper: {
-    position: 'relative',
-    borderRadius: '16px',
-    overflow: 'hidden',
+  card: {
+    background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.08)',
-    background: '#0a0a0a',
+    borderRadius: '20px',
+    padding: '32px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  cardEyebrow: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: '4px',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  fieldGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  label: {
+    fontSize: '12px',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  input: {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    color: '#fff',
+    fontSize: '14px',
+    outline: 'none',
+    width: '100%',
+    fontFamily: 'inherit',
+    transition: 'border-color 0.2s',
+  },
+  btn: {
+    background: '#F97316',
+    color: '#000',
+    fontWeight: '700',
+    fontSize: '15px',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '14px 24px',
+    cursor: 'pointer',
+    width: '100%',
+    marginTop: '4px',
+    transition: 'opacity 0.2s',
+  },
+  noRisk: {
+    fontSize: '12px',
+    color: 'rgba(255,255,255,0.3)',
+    textAlign: 'center',
+  },
+  success: {
+    textAlign: 'center',
+    padding: '40px 0',
   },
   skeleton: {
     position: 'absolute',
@@ -157,26 +261,15 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '16px',
-    background: '#0a0a0a',
-    zIndex: 1,
+    gap: '12px',
+    background: 'transparent',
   },
-  skeletonSpinner: {
-    width: '32px',
-    height: '32px',
+  spinner: {
+    width: '28px',
+    height: '28px',
     border: '2px solid rgba(249,115,22,0.2)',
     borderTop: '2px solid #F97316',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
-  },
-  skeletonText: {
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.35)',
-  },
-  widget: {
-    minWidth: '320px',
-    height: '700px',
-    width: '100%',
-    display: 'block',
   },
 };
