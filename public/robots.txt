@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://damiencamici.dev/sitemap.xml

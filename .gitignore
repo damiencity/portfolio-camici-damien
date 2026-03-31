@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.local
+.vercel
+*.log
+.DS_Store
+Thumbs.db
+
+# Cursor / IDE local
+.cursor/
+
+# Python
+__pycache__/
+*.pyc

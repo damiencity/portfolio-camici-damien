@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-camici-damien",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "build:report": "cross-env ANALYZE=1 vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@splinetool/react-spline": "^4.1.0",
+    "gsap": "^3.14.2",
+    "motion": "^12.38.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "cross-env": "^10.1.0",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "vite": "^5.0.0",
+    "vite-plugin-prerender": "^1.0.8"
+  }
+}
